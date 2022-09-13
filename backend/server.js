@@ -1,26 +1,29 @@
 const express = require('express');
-const { chats } = require('./data/data');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const connectDB = require('./config/db');
+const colors = require('colors');
+const userRoutes = require('./routes/userRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
 
 const app = express();
 dotenv.config();
+connectDB();
 app.use(cors());
+
+app.use(express.json()); // permet de convertir les données envoyées du frontend en json
 
 app.get("/", (req, res) => { // on va get de l'information à la route '/'
     res.send("API is running successfully");
 });
 
-app.get("/api/chat", (req, res) => { // lorsqu'on va sur le lien .../api/chat, on reçoit
-    res.send(chats); // une réponse envoyée qui correspond aux chats
-});
+app.use("/api/user", userRoutes);
+app.use("/api/chat", chatRoutes);
 
-app.get("/api/chat/:id", function (req, res) {
-    // console.log(req.params.id); 
-    const singleChat = chats.find(chat => chat._id === req.params.id); // find renvoie la valeur du premier élément trouvé dans le tableau/objet, qui est égal à l'id que l'on met dans l'url
-    res.send(singleChat); // on reçoit la réponse envoyée qui est singleChat
-});
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001; // fait appel à la constante PORT dans le fichier .env
 
-app.listen(PORT, console.log(`Server started on port ${PORT}`));
+app.listen(PORT, console.log(`Server started on port ${PORT}`.yellow.bold));
